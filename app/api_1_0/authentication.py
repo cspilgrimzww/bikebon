@@ -1,7 +1,9 @@
 __author__ = 'cspilgrim'
 from flask.ext.httpauth import HTTPBasicAuth
-from .errors import forbidden
-from ..models import BKUser
+from .errors import forbidden, unauthorized
+from ..models import BKUser,AnonymousUser
+from . import api
+from flask import g,jsonify
 
 auth = HTTPBasicAuth()
 
@@ -16,10 +18,10 @@ def before_request():
 def auth_error():
     return unauthorized('Invalid credentials')
 
-@auth.verifying_password
+@auth.verify_password
 def verify_password(token,password):
     if token == '':
-        g.current_user == AnonymousUser()
+        g.current_user = AnonymousUser()
         return True
     if password == '':
         g.current_user = BKUser.verify_auth_token(token)
