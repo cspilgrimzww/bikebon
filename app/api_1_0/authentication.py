@@ -1,3 +1,4 @@
+#coding=utf-8
 __author__ = 'cspilgrim'
 from flask.ext.httpauth import HTTPBasicAuth
 from .errors import forbidden, unauthorized
@@ -7,36 +8,35 @@ from flask import g,jsonify
 
 auth = HTTPBasicAuth()
 
-@api.before_request
+# @api.before_request
 @auth.login_required
 def before_request():
-    if not g.current_user.is_anonymous and \
-            not g.current_user.confirmed:
-        return forbidden('Unconfirmed account')
+    pass
+    # if not g.current_user.is_anonymous() and \
+    #         not g.current_user.confirmed:
+    #     return forbidden('Unconfirmed account')
 
 @auth.error_handler
 def auth_error():
     return unauthorized('Invalid credentials')
 
+#使用用户手机号和token两种验证方法
 @auth.verify_password
-def verify_password(token,password):
-    if token == '':
-        g.current_user = AnonymousUser()
-        return True
-    if password == '':
-        g.current_user = BKUser.verify_auth_token(token)
-        g.token_used =True
-        return g.current_user is not None
-    user = BKUser.query.filter_by()
+def verify_password(phonenumber_or_token,password):
+    # first try to authenticate by token
+    user = BKUser.verify_auth_token(phonenumber_or_token)
     if not user:
-        return False
+        print(u'token验证不通过')
+        # try to authenticate with phone_number/password
+        user = BKUser.query.filter_by(user_phone = phonenumber_or_token).first()
+        if not user or not user.verify_password(password):
+            print(u'用户不存在或密码验证不通过')
+            return False
     g.current_user = user
-    g.token_used = False
-    return  BKUser.verify_auth_token(password)
+    return True
 
 @api.route('/token')
-def get_token():
-    if g.current_user.is_anonymous or g.token_used:
-        return unauthorized('Invalid credentials')
-    return jsonify({'token':g.current_user.generate_auth_token(
-        expiration = 3600),'expiration':3600})
+@auth.login_required
+def get_auth_token():
+    token = g.current_user.generate_auth_token(3600)
+    return jsonify({ 'token': token.decode('ascii') })

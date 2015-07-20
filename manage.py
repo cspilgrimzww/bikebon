@@ -14,5 +14,19 @@ def make_shell_context():
 manager.add_command('shell', Shell(make_shell_context))
 manager.add_command('db', MigrateCommand)
 
+#seed
+@manager.command
+def seed():
+    from app.api_1_0.demo_datas import seed_user, seed_bike
+
+    try:
+        seed_user()
+        seed_bike()
+
+    except Exception, e:
+        print(e)
+    else:
+        print("add seed success")
+
 if __name__ == '__main__':
     manager.run()
