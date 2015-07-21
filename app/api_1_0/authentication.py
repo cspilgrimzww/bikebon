@@ -29,14 +29,14 @@ def verify_password(phonenumber_or_token,password):
         print(u'token验证不通过')
         # try to authenticate with phone_number/password
         user = BKUser.query.filter_by(user_phone = phonenumber_or_token).first()
-        if not user or not user.verify_password(password):
+        if not user or not user.user_current_token !=password:
             print(u'用户不存在或密码验证不通过')
             return False
     g.current_user = user
     return True
 
-@api.route('/token')
+@api.route('/get_token')
 @auth.login_required
 def get_auth_token():
-    token = g.current_user.generate_auth_token(3600)
+    token = g.current_user.generate_auth_token(0)
     return jsonify({ 'token': token.decode('ascii') })
