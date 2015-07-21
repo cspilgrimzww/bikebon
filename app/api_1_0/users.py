@@ -2,7 +2,7 @@
 __author__ = 'cspilgrim'
 from .. import db
 from ..models import BKUser
-from flask import jsonify, request
+from flask import jsonify, request,g
 from . import api
 from .help_utils import generate_confirm_number
 from .help_utils import request_confirm_number
@@ -37,9 +37,23 @@ def confirm_user():
     user = BKUser.query.filter_by(user_phone = received_phone_number).first()
     if str(user.user_current_token) == received_num:
         print('两码一致')
+
         user.user_confirmed = True
         db.session.add(user)
         db.session.commit()
-        token = user.generate_auth_token(0)
+        token = user.generate_auth_token(3600*24*365*100)
         return jsonify({ 'token': token.decode('ascii') })
     return jsonify({"error":"confirm_error"})
+
+# 提交用户的验证信息到数据库
+
+@api.route('/users/verify_user',methods=['POST'])
+@auth.login_required
+def add_user_verify_info():
+    g.current_user.user_name=request.json.get('user_name')
+    g.current_user.user_identity_number=request.json.get('user_identity_number')
+    g.current_user.user_student_identity_number=request.json.get('user_student_identity_number')
+    db.session.add(g.current_user)
+    db.session.commit()
+    return jsonify({})
+
