@@ -13,6 +13,7 @@ from ..models import Status
 @api.route('/users/<int:id>')
 @auth.login_required
 def get_user(id):
+    id = int(id)
     user = BKUser.query.get_or_404(id)
     return jsonify(user.to_json())
 
@@ -40,6 +41,6 @@ def confirm_user():
         user.user_confirmed = True
         db.session.add(user)
         db.session.commit()
-        token = user.generate_auth_token(0)
+        token = user.generate_auth_token(3600*24*365)
         return jsonify({ 'token': token.decode('ascii') })
     return jsonify({"error":"confirm_error"})
