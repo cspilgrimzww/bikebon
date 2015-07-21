@@ -27,11 +27,9 @@ def verify_password(phonenumber_or_token,password):
     user = BKUser.verify_auth_token(phonenumber_or_token)
     print(phonenumber_or_token)
     if not user:
-        print(u'token验证不通过')
         # try to authenticate with phone_number/password
         user = BKUser.query.filter_by(user_phone = phonenumber_or_token).first()
         if not user or not user.user_current_token !=password:
-            print(u'用户不存在或密码验证不通过')
             return False
     g.current_user = user
     return True
