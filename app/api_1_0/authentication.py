@@ -36,7 +36,6 @@ def verify_password(phonenumber_or_token,password):
     return True
 
 @api.route('/get_token')
-@auth.login_required
 def get_auth_token():
     token = g.current_user.generate_auth_token(0)
     return jsonify({ 'token': token.decode('ascii') })

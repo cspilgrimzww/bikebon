@@ -17,7 +17,7 @@ def get_user(id):
     return jsonify(user.to_json())
 
 # 获取短信验证码
-@api.route('/users/get_comfirm_num',methods=['POST'])
+@api.route('/users/get_confirm_num',methods=['POST'])
 def get_confirm_num():
     phone_num = str(request.json.get('phone_number'))
     confirm_num = generate_confirm_number()
@@ -40,5 +40,6 @@ def confirm_user():
         user.user_confirmed = True
         db.session.add(user)
         db.session.commit()
-        return jsonify({})
+        token = user.generate_auth_token(0)
+        return jsonify({ 'token': token.decode('ascii') })
     return jsonify({"error":"confirm_error"})
