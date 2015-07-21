@@ -25,6 +25,7 @@ def auth_error():
 def verify_password(phonenumber_or_token,password):
     # first try to authenticate by token
     user = BKUser.verify_auth_token(phonenumber_or_token)
+    print(phonenumber_or_token)
     if not user:
         print(u'token验证不通过')
         # try to authenticate with phone_number/password
