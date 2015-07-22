@@ -57,7 +57,7 @@ def user_logout():
     db.session.commit()
     return jsonify({})
 
-# 提交用户的验证信息到数据库
+# 提交用户的验证信息到数据库,等待验证
 
 @api.route('/users/verify_user', methods=['POST'])
 @auth.login_required
@@ -68,4 +68,8 @@ def add_user_verify_info():
     db.session.add(g.current_user)
     db.session.commit()
     return jsonify({})
+
+
+
+
 
