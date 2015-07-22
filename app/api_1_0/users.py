@@ -14,6 +14,8 @@ from ..models import Status
 @auth.login_required
 def get_user(id):
     id = int(id)
+    if g.current_user.user_id !=id:
+        return jsonify({"error":"you are not allowed to get other's info"})
     user = BKUser.query.get_or_404(id)
     return jsonify(user.to_json())
 
@@ -36,7 +38,7 @@ def confirm_user():
     received_num = str(request.json.get('confirm_number'))
     received_phone_number = str(request.json.get('phone_number'))
     user = BKUser.query.filter_by(user_phone = received_phone_number).first()
-    if str(user.user_current_token) == received_num:
+    if str(user.user_current_token) == received_num and not user.user_current_token_used:
         print('两码一致')
         user.user_confirmed = True
         db.session.add(user)
