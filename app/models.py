@@ -12,6 +12,10 @@ class Status():
     AVAILABLE = u'待租'
     USING = u'使用中'
 
+class Login_status():
+    LOGIN = u"登陆状态"
+    LOGOUT = u"登出状态"
+
 class BKUser(db.Model):
     __tablename__ = 'bk_user'
     user_id = db.Column(db.Integer, primary_key=True)
@@ -57,7 +61,7 @@ class BKUser(db.Model):
             data = s.loads(token)
         except:
             return None
-        return BKUser.query.filter_by(user_phone=data['user_phone'])
+        return BKUser.query.filter_by(user_phone=data['user_phone']).first()
 
     def to_json(self):
         json_user = {
@@ -100,10 +104,3 @@ class BKBike(db.Model):
         user = json_bike.get('user')
         return BKBike(bike_id = id, bike_name = name, bike_status = status,
                       bike_price = price, bike_type = type, bike_user = user)
-
-class AnonymousUser(AnonymousUserMixin):
-    def can(self, permissions):
-        return False
-
-    def is_administrator(self):
-        return False
