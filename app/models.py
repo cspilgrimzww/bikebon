@@ -17,6 +17,7 @@ class BKUser(db.Model):
     user_id = db.Column(db.Integer, primary_key=True)
     user_name = db.Column(db.String(64), index=True)
     user_phone = db.Column(db.String(32))
+    user_password_hash = db.Column(db.String(128))
     user_identity_number = db.Column(db.String(32), unique= True)
     user_student_identity_number = db.Column(db.String(32), unique= True)
     user_current_token = db.Column(db.Integer)
@@ -29,18 +30,18 @@ class BKUser(db.Model):
     def is_anonymous(self):
         return self.user_phone is None
 
-    # @property
-    # def password(self):
-    #     raise AttributeError(u'密码散列值是不可读属性')
-    #
-    # @password.setter
-    # def password(self, password):
-    #     self.user_password_hash = generate_password_hash(password)
-    #
-    # def verify_password(self, password):
-    #     verify_result=check_password_hash(self.user_password_hash,password)
-    #     print("user_password_hash_result:"+str(verify_result))
-    #     return check_password_hash(self.user_password_hash,password)
+    @property
+    def password(self):
+        raise AttributeError(u'密码散列值是不可读属性')
+
+    @password.setter
+    def password(self, password):
+        self.user_password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        verify_result=check_password_hash(self.user_password_hash,password)
+        print("user_password_hash_result:"+str(verify_result))
+        return check_password_hash(self.user_password_hash,password)
 
 
 

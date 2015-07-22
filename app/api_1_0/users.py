@@ -10,9 +10,10 @@ from .authentication import auth
 from ..models import Status
 
 # 获取用户个人信息
-@api.route('/users/<int:id>')
+@api.route('/users/user')
 @auth.login_required
-def get_user(id):
+def get_user():
+    id = g.current_user.user_id
     user = BKUser.query.get_or_404(id)
     return jsonify(user.to_json())
 
