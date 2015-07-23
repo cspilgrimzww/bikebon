@@ -22,7 +22,9 @@ def get_user():
 def get_confirm_num():
     phone_num = str(request.json.get('phone_number'))
     confirm_num = generate_confirm_number()
-    user = BKUser()
+    user = BKUser.query.filter_by(user_phone = phone_num).first()
+    if not user:
+        user = BKUser()
     user.user_current_token = confirm_num
     user.user_phone = phone_num
     db.session.add(user)
