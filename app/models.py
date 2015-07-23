@@ -227,8 +227,16 @@ class AnonymousUser(AnonymousUserMixin):
     def is_administrator(self):
         return False
 
-# class BKHeadImg(db.Column):
-#     __tablename__="bk_head_image"
-#     head_image_id = db.Column(db.Integer,primary_key=True)
-#     head_image_name = db.Column(db.String(128))
-#     head_imgage_path =
+class BKHeadImg(db.Column):
+    __tablename__ = "bk_head_image"
+    head_image_id = db.Column(db.Integer, primary_key=True)
+    head_image_name = db.Column(db.String(128))
+    head_image_path = db.Column(db.String(128))
+    head_image_status = db.Column(db.Boolean, default=False)
+
+    def to_json(self):
+        json_img = {
+            "name": self.head_image_name,
+            "path": self.head_image_path
+        }
+        return json_img
