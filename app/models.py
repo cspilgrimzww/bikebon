@@ -27,6 +27,7 @@ class BKUser(db.Model):
     user_gender = db.Column(db.String(32))
     user_school=db.Column(db.String(64))
     user_login_status=db.Column(db.String(32))
+    posts = db.relationship('BKPost',backref='author',lazy='dynamic')#定义和posts的关系，可返回某个作者的所有文章
 
 
 
@@ -80,7 +81,7 @@ class BKBike(db.Model):
     bike_id = db.Column(db.Integer,primary_key=True)
     bike_name = db.Column(db.String(32))
     bike_status = db.Column(db.String(32))
-    bike_rent_price = db.Column(db.Float)
+    #bike_rent_price = db.Column(db.Float)
     bike_type = db.Column(db.String(32))
     bike_user = db.Column(db.Integer,db.ForeignKey('bk_user.user_id')) #定义外键，与租车用户关联
     bike_description=db.Column(db.Text)
@@ -179,6 +180,51 @@ class BKLender(db.Model):
         desc=json_lender.get('description')
         return BKLender(lender_id=id,lender_account=account,lender_position=position,lender_notice=notice,
                         lender_description=desc)
+
+
+
+
+#posts模型，用于发表心情，状态
+class BKPost(db.Model):
+    __tablename__ = 'bk_posts'
+    posts_id = db.Column(db.Integer,primary_key=True)
+    posts_body = db.Column(db.Text)
+    posts_timestamp = db.Column(db.DataTime,index=True,default=datatime.utcnow)
+    author_id = db.Column(db.Integer,db.ForeignKey('bk_user.user_id'))#定义外键，与作者联系
+
+
+    def to_json(self):
+        posts_json ={
+            'id':self.posts_id,
+            'body':self.posts_body,
+            'timestamp':self.timestamp,
+
+        }
+        return posts_json
+
+
+    @staticmethod
+    def from_json(json_posts):
+        id = json_posts.get('id')
+        if id is None or id =='':
+            raise ValidationError(u'')
+        body = json_posts.get('body')
+        timestamp = json_posts.get('timestamp')
+        return BKPost(posts_id=id,posts_body=body,posts_timestamp=timestamp)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
