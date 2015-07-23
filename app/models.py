@@ -206,7 +206,7 @@ class BKLender(db.Model):
 class BKBikeTypeComments(db.Model):
     __tablename__='bk_bike_type_comments'
     bike_type_comments_id = db.Column(db.Integer,primary_key=True)
-    bike_type_comments_body = db.Column(db.text)
+    bike_type_comments_body = db.Column(db.Text)
     bike_type_comments_user_id = db.Column(db.Integer, db.ForeignKey("bk_user.user_id"))
     bike_type_comments_timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     bike_type_comments_bike_type = db.Column(db.Integer,db.ForeignKey("bk_bike_type.bike_type_id"))
@@ -226,3 +226,9 @@ class AnonymousUser(AnonymousUserMixin):
 
     def is_administrator(self):
         return False
+
+# class BKHeadImg(db.Column):
+#     __tablename__="bk_head_image"
+#     head_image_id = db.Column(db.Integer,primary_key=True)
+#     head_image_name = db.Column(db.String(128))
+#     head_imgage_path =

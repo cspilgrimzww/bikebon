@@ -1,8 +1,8 @@
 # coding=utf8
 __author__ = 'cspilgrim'
 from .. import db
-from ..models import BKUser,Login_status
-from flask import jsonify, request,g
+from ..models import BKUser, Login_status
+from flask import jsonify, request, g
 from . import api
 from .help_utils import generate_confirm_number
 from .help_utils import request_confirm_number
@@ -18,7 +18,7 @@ def get_user():
     return jsonify(user.to_json())
 
 # 获取短信验证码
-@api.route('/users/get_confirm_num',methods=['POST'])
+@api.route('/users/get_confirm_num', methods=['POST'])
 def get_confirm_num():
     phone_num = str(request.json.get('phone_number'))
     confirm_num = generate_confirm_number()
@@ -29,7 +29,7 @@ def get_confirm_num():
     user.user_phone = phone_num
     db.session.add(user)
     db.session.commit()
-    answer = request_confirm_number(phone_num,confirm_num)
+    answer = request_confirm_number(phone_num, confirm_num)
     return jsonify(answer)
 
 # 验证短信验证码
@@ -64,7 +64,7 @@ def user_logout():
 @api.route('/users/verify_user', methods=['POST'])
 @auth.login_required
 def add_user_verify_info():
-    g.current_user.user_name=request.json.get('user_name')
+    g.current_user.user_name = request.json.get('user_name')
     g.current_user.user_identity_number=request.json.get('user_identity_number')
     g.current_user.user_student_identity_number=request.json.get('user_student_identity_number')
     db.session.add(g.current_user)
