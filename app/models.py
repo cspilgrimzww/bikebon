@@ -3,23 +3,29 @@ __author__ = 'cspilgrim'
 from itsdangerous import TimedJSONWebSignatureSerializer as Serialize
 from . import db
 from flask.ext.login import AnonymousUserMixin
-from flask import current_app
+from flask import current_app,url_for
 from app.exceptions import ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 class Status():
     LOCKED = u'待取'
     AVAILABLE = u'待租'
     USING = u'使用中'
 
+class Login_status():
+    LOGIN = u"登陆状态"
+    LOGOUT = u"登出状态"
+
 class BKUser(db.Model):
     __tablename__ = 'bk_user'
     user_id = db.Column(db.Integer, primary_key=True)
     user_name = db.Column(db.String(64), index=True)
     user_phone = db.Column(db.String(32))
+    user_password_hash = db.Column(db.String(128))
     user_identity_number = db.Column(db.String(32), unique= True)
     user_student_identity_number = db.Column(db.String(32), unique= True)
-    user_current_token = db.Column(db.Integer)
+    user_current_token = db.Column(db.String(32))
     user_balance = db.Column(db.Float,default=0)
     user_deposit = db.Column(db.Float,default=0)
     user_verify = db.Column(db.Boolean,default=False)
@@ -27,26 +33,25 @@ class BKUser(db.Model):
     user_gender = db.Column(db.String(32))
     user_school=db.Column(db.String(64))
     user_login_status=db.Column(db.String(32))
-    posts = db.relationship('BKPost',backref='author',lazy='dynamic')#定义和posts的关系，可返回某个作者的所有文章
-
+    user_bike_type_comments = db.relationship("BKBikeTypeComments", backref="owner", lazy="dynamic")
 
 
     @property
     def is_anonymous(self):
         return self.user_phone is None
 
-    # @property
-    # def password(self):
-    #     raise AttributeError(u'密码散列值是不可读属性')
-    #
-    # @password.setter
-    # def password(self, password):
-    #     self.user_password_hash = generate_password_hash(password)
-    #
-    # def verify_password(self, password):
-    #     verify_result=check_password_hash(self.user_password_hash,password)
-    #     print("user_password_hash_result:"+str(verify_result))
-    #     return check_password_hash(self.user_password_hash,password)
+    @property
+    def password(self):
+        raise AttributeError(u'密码散列值是不可读属性')
+
+    @password.setter
+    def password(self, password):
+        self.user_password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        verify_result=check_password_hash(self.user_password_hash,password)
+        print("user_password_hash_result:"+str(verify_result))
+        return check_password_hash(self.user_password_hash,password)
 
 
 
@@ -62,7 +67,8 @@ class BKUser(db.Model):
             data = s.loads(token)
         except:
             return None
-        return BKUser.query.filter_by(user_phone=data['user_phone'])
+        print data['user_phone']
+        return BKUser.query.filter_by(user_phone=data['user_phone']).first()
 
     def to_json(self):
         json_user = {
@@ -72,7 +78,7 @@ class BKUser(db.Model):
             'phone':self.user_phone,
             'balance':self.user_balance,
             'deposit':self.user_deposit,
-            'confirm_info': self.user_verify
+            'verify_info': self.user_verify,
         }
         return json_user
 
@@ -81,14 +87,14 @@ class BKBike(db.Model):
     bike_id = db.Column(db.Integer,primary_key=True)
     bike_name = db.Column(db.String(32))
     bike_status = db.Column(db.String(32))
-    #bike_rent_price = db.Column(db.Float)
-    bike_type = db.Column(db.String(32))
-    bike_user = db.Column(db.Integer,db.ForeignKey('bk_user.user_id')) #定义外键，与租车用户关联
+    bike_rent_price = db.Column(db.Float)
+    bike_type = db.Column(db.String(32), db.ForeignKey('bk_bike_type.bike_type_id'))#定义外键，与车型相关联
+    bike_user = db.Column(db.Integer, db.ForeignKey('bk_user.user_id')) #定义外键，与租车用户关联
     bike_description=db.Column(db.Text)
-    bike_lender_id = db.Column(db.Integer,db.ForeignKey('bk_lender.lender_id')) #定义外键，与租车方联系
+    bike_lender_id = db.Column(db.Integer, db.ForeignKey('bk_lender.lender_id')) #定义外键，与租车方联系
 
     def to_json(self):
-        bike_json={
+        bike_json = {
             'id': self.bike_id,
             'name': self.bike_name,
             'status': self.bike_status,
@@ -112,7 +118,23 @@ class BKBike(db.Model):
         return BKBike(bike_id = id, bike_name = name, bike_status = status,
                       bike_price = price, bike_type = type, bike_user = user,bike_description=desc)
 
+#车型
+class BKBikeType(db.Model):
+    __tablename__ = 'bk_bike_type'
+    bike_type_id = db.Column(db.Integer,primary_key=True)
+    bike_type_name = db.Column(db.String(32))
+    bike_type_price = db.Column(db.String(32))
+    bike_type_description = db.Column(db.Text)
+    bikes = db.relationship("BKBike",backref="type_of", lazy ="dynamic")
 
+    def to_json(self):
+        bike_type_json = {
+            "id":self.bike_type_id,
+            "name":self.bike_type_name,
+            "price":self.bike_type_price,
+            "description":self.bike_type_description
+        }
+        return bike_type_json
 
 #订单模型
 class BKOrder(db.Model):
@@ -181,8 +203,22 @@ class BKLender(db.Model):
         return BKLender(lender_id=id,lender_account=account,lender_position=position,lender_notice=notice,
                         lender_description=desc)
 
+class BKBikeTypeComments(db.Model):
+    __tablename__='bk_bike_type_comments'
+    bike_type_comments_id = db.Column(db.Integer,primary_key=True)
+    bike_type_comments_body = db.Column(db.text)
+    bike_type_comments_user_id = db.Column(db.Integer, db.ForeignKey("bk_user.user_id"))
+    bike_type_comments_timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    bike_type_comments_bike_type = db.Column(db.Integer,db.ForeignKey("bk_bike_type.bike_type_id"))
 
-
+    def to_json(self):
+        json_comments={
+            "id":self.bike_type_comments_id,
+            "body":self.bike_type_comments_body,
+            "user_id":self.bike_type_comments_user_id,
+            "time":self.bike_type_comments_timestamp
+        }
+        return json_comments
 
 #posts模型，用于发表心情，状态
 class BKPost(db.Model):
@@ -210,28 +246,7 @@ class BKPost(db.Model):
             raise ValidationError(u'')
         body = json_posts.get('body')
         timestamp = json_posts.get('timestamp')
-        return BKPost(posts_id=id,posts_body=body,posts_timestamp=timestamp)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return BKPost(posts_id=id,posts_body=body,posts_timestamp=timestamp
 
 
 class AnonymousUser(AnonymousUserMixin):
